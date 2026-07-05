@@ -225,6 +225,20 @@ export type Payment = {
   updated_at: string;
 };
 
+/** Perfil del consultorio — fila singleton (id = 1). */
+export type ClinicSettings = {
+  id: number;
+  clinic_name: string;
+  professional_name: string | null;
+  professional_title: string | null;
+  license_number: string | null;
+  address: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  email: string | null;
+  updated_at: string;
+};
+
 export type AuditLog = {
   id: number;
   occurred_at: string;
@@ -269,6 +283,7 @@ export interface Database {
       medical_documents: { Row: MedicalDocument; Insert: Partial<MedicalDocument> & Pick<MedicalDocument, 'doc_type' | 'patient_id' | 'issued_by' | 'body_final'>; Update: Partial<MedicalDocument>; Relationships: [] };
       payments: { Row: Payment; Insert: PaymentInsert; Update: Partial<Payment>; Relationships: [] };
       audit_logs: { Row: AuditLog; Insert: never; Update: never; Relationships: [] };
+      clinic_settings: { Row: ClinicSettings; Insert: Partial<ClinicSettings>; Update: Partial<Omit<ClinicSettings, 'id'>>; Relationships: [] };
     };
     Views: {
       patients_basic: { Row: PatientBasic; Relationships: [] };

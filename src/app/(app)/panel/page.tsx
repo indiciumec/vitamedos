@@ -3,9 +3,14 @@ import { getCurrentProfile } from '@/lib/auth';
 import { getAppointments } from '@/lib/queries/appointments';
 import { getDailyCash } from '@/lib/queries/payments';
 import { listMyDrafts } from '@/lib/queries/extra';
+import { getClinicSettings } from '@/lib/queries/settings';
+import { WA_TEMPLATES } from '@/lib/whatsapp';
+import WAButton from '@/components/wa-button';
 import {
-  APPT_STATUS_BADGE, APPT_STATUS_LABELS, dayRange, formatDateLong, formatMoney, formatTime, todayEC,
+  APPT_STATUS_BADGE, APPT_STATUS_LABELS, dayRange, formatDate, formatDateLong, formatMoney, formatTime, todayEC,
 } from '@/lib/utils';
+
+const WA_REMINDER_STATES = ['solicitada', 'por_confirmar', 'confirmada'];
 
 export const dynamic = 'force-dynamic';
 
@@ -15,11 +20,13 @@ export default async function PanelPage() {
   const { from, to } = dayRange(hoy);
 
   const canAgenda = ['medico', 'recepcion', 'admin'].includes(profile.role);
-  const [citas, caja, borradores] = await Promise.all([
+  const [citas, caja, borradores, clinic] = await Promise.all([
     canAgenda ? getAppointments(from, to).catch(() => []) : Promise.resolve([]),
     canAgenda ? getDailyCash(hoy).catch(() => null) : Promise.resolve(null),
     profile.role === 'medico' ? listMyDrafts().catch(() => []) : Promise.resolve([]),
+    getClinicSettings().catch(() => null),
   ]);
+  const clinicName = clinic?.clinic_name ?? 'Vitamed';
 
   const activas = citas.filter((c) => !['cancelada', 'no_asistio'].includes(c.status));
 
@@ -85,15 +92,28 @@ export default async function PanelPage() {
             ) : (
               <ul className="divide-y divide-vitamed-50">
                 {citas.map((c) => (
-                  <li key={c.id} className="flex items-center gap-4 px-5 py-3">
-                    <span className="w-12 text-sm font-semibold tabular-nums text-vitamed-900">
+                  <li key={c.id} className="flex items-center gap-3 px-5 py-3">
+                    <span className="w-12 shrink-0 text-sm font-semibold tabular-nums text-vitamed-900">
                       {formatTime(c.scheduled_at)}
                     </span>
-                    <span className="flex-1 truncate text-sm text-vitamed-800">
+                    <span className="min-w-0 flex-1 truncate text-sm text-vitamed-800">
                       {c.patient.first_name} {c.patient.last_name}
                       {c.reason && <span className="text-vitamed-500"> · {c.reason}</span>}
                     </span>
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${APPT_STATUS_BADGE[c.status]}`}>
+                    {WA_REMINDER_STATES.includes(c.status) && (
+                      <WAButton
+                        compact
+                        label="Recordar"
+                        phone={c.patient.phone}
+                        message={WA_TEMPLATES.confirmacion({
+                          clinica: clinicName,
+                          nombre: c.patient.first_name,
+                          fecha: formatDate(c.scheduled_at),
+                          hora: formatTime(c.scheduled_at),
+                        })}
+                      />
+                    )}
+                    <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${APPT_STATUS_BADGE[c.status]}`}>
                       {APPT_STATUS_LABELS[c.status]}
                     </span>
                   </li>

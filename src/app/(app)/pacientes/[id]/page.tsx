@@ -21,12 +21,13 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export default async function FichaPacientePage({ params }: { params: { id: string } }) {
+export default async function FichaPacientePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const profile = (await getCurrentProfile())!;
   const isMedico = profile.role === 'medico';
 
   if (isMedico) {
-    const patient = await getPatientClinical(params.id).catch(() => null);
+    const patient = await getPatientClinical(id).catch(() => null);
     if (!patient) notFound();
 
     const [consultas, recetas, docs] = await Promise.all([
@@ -185,7 +186,7 @@ export default async function FichaPacientePage({ params }: { params: { id: stri
   }
 
   // Recepción / admin: solo la vista básica (sin datos clínicos, LOPDP)
-  const basic = await getPatientBasic(params.id);
+  const basic = await getPatientBasic(id);
   if (!basic) notFound();
 
   return (

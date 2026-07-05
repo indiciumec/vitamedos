@@ -4,7 +4,7 @@ import './globals.css';
 
 const quicksand = Quicksand({
   subsets: ['latin'],
-  variable: '--font-brand',
+  variable: '--font-quicksand',
   display: 'swap',
 });
 

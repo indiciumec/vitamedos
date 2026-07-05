@@ -8,10 +8,11 @@ export const dynamic = 'force-dynamic';
 
 type Search = { fecha?: string; vista?: string; paciente?: string };
 
-export default async function AgendaPage({ searchParams }: { searchParams: Search }) {
+export default async function AgendaPage({ searchParams }: { searchParams: Promise<Search> }) {
+  const sp = await searchParams;
   const profile = (await getCurrentProfile())!;
-  const fecha = /^\d{4}-\d{2}-\d{2}$/.test(searchParams.fecha ?? '') ? searchParams.fecha! : todayEC();
-  const vista = searchParams.vista === 'semana' ? 'semana' : 'dia';
+  const fecha = /^\d{4}-\d{2}-\d{2}$/.test(sp.fecha ?? '') ? sp.fecha! : todayEC();
+  const vista = sp.vista === 'semana' ? 'semana' : 'dia';
 
   const days = vista === 'semana' ? weekDays(fecha) : [fecha];
   const from = dayRange(days[0]).from;
@@ -20,7 +21,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Searc
   const [citas, services, preselected] = await Promise.all([
     getAppointments(from, to).catch(() => []),
     getServices().catch(() => []),
-    searchParams.paciente ? getPatientBasic(searchParams.paciente) : Promise.resolve(null),
+    sp.paciente ? getPatientBasic(sp.paciente) : Promise.resolve(null),
   ]);
 
   return (

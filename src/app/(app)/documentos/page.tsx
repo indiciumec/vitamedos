@@ -7,12 +7,13 @@ export const dynamic = 'force-dynamic';
 
 type Search = { paciente?: string; consulta?: string };
 
-export default async function DocumentosPage({ searchParams }: { searchParams: Search }) {
+export default async function DocumentosPage({ searchParams }: { searchParams: Promise<Search> }) {
+  const sp = await searchParams;
   const profile = (await getCurrentProfile())!;
   const [templates, recientes, preselected] = await Promise.all([
     getTemplates().catch(() => []),
     listRecentDocuments().catch(() => []),
-    searchParams.paciente ? getPatientBasic(searchParams.paciente) : Promise.resolve(null),
+    sp.paciente ? getPatientBasic(sp.paciente) : Promise.resolve(null),
   ]);
 
   return (
@@ -21,7 +22,7 @@ export default async function DocumentosPage({ searchParams }: { searchParams: S
       templates={templates}
       recientes={recientes}
       preselectedPatient={preselected}
-      consultationId={searchParams.consulta ?? null}
+      consultationId={sp.consulta ?? null}
     />
   );
 }

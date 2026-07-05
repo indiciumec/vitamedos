@@ -2,15 +2,20 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getConsultation } from '@/lib/queries/extra';
 import { getPatientClinical } from '@/lib/queries/patients';
+import { getClinicSettings } from '@/lib/queries/settings';
 import { calcAge, formatDate } from '@/lib/utils';
 import ConsultationForm from '@/components/ConsultationForm';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ConsultaDetallePage({ params }: { params: { id: string } }) {
-  const consultation = await getConsultation(params.id).catch(() => null);
+export default async function ConsultaDetallePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const consultation = await getConsultation(id).catch(() => null);
   if (!consultation) notFound();
-  const patient = await getPatientClinical(consultation.patient_id).catch(() => null);
+  const [patient, clinic] = await Promise.all([
+    getPatientClinical(consultation.patient_id).catch(() => null),
+    getClinicSettings().catch(() => null),
+  ]);
   if (!patient) notFound();
   const age = calcAge(patient.birth_date);
 
@@ -35,7 +40,7 @@ export default async function ConsultaDetallePage({ params }: { params: { id: st
         </div>
       )}
 
-      <ConsultationForm patient={patient} consultation={consultation} />
+      <ConsultationForm patient={patient} consultation={consultation} clinic={clinic} />
     </main>
   );
 }

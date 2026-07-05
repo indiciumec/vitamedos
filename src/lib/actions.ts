@@ -10,6 +10,7 @@ import * as prescriptions from '@/lib/queries/prescriptions';
 import * as documents from '@/lib/queries/documents';
 import * as payments from '@/lib/queries/payments';
 import * as extra from '@/lib/queries/extra';
+import * as settings from '@/lib/queries/settings';
 import type {
   AppointmentInput, ConsultationInput, DocumentInput, PatientInput, PaymentInput, PrescriptionInput,
 } from '@/lib/validators';
@@ -98,6 +99,13 @@ export async function upsertTemplateAction(
   tpl: Partial<DocumentTemplate> & Pick<DocumentTemplate, 'doc_type' | 'name' | 'body_template'>
 ) {
   return safe(() => extra.upsertTemplate(tpl));
+}
+
+// ---------- Perfil del consultorio ----------
+export async function updateClinicSettingsAction(
+  patch: Partial<Omit<import('@/types/database.types').ClinicSettings, 'id' | 'updated_at'>>
+) {
+  return safe(() => settings.updateClinicSettings(patch));
 }
 
 // ---------- Caja ----------

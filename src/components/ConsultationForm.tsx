@@ -8,13 +8,16 @@ import {
   createDraftConsultationAction, updateDraftConsultationAction,
 } from '@/lib/actions';
 import type { ConsultationInput } from '@/lib/validators';
-import type { Consultation, Patient, VitalSigns } from '@/types/database.types';
-import { CONSULT_STATUS_BADGE, CONSULT_STATUS_LABELS, formatDate } from '@/lib/utils';
+import type { ClinicSettings, Consultation, Patient, VitalSigns } from '@/types/database.types';
+import { CONSULT_STATUS_BADGE, CONSULT_STATUS_LABELS, formatDate, todayEC } from '@/lib/utils';
+import { WA_TEMPLATES } from '@/lib/whatsapp';
+import WAButton from '@/components/wa-button';
 
 type Props = {
   patient: Patient;
   consultation?: Consultation;
   appointmentId?: string | null;
+  clinic?: ClinicSettings | null;
 };
 
 const inputCls =
@@ -29,7 +32,7 @@ function Field({ label, children, className }: { label: string; children: React.
   );
 }
 
-export default function ConsultationForm({ patient, consultation, appointmentId }: Props) {
+export default function ConsultationForm({ patient, consultation, appointmentId, clinic }: Props) {
   const router = useRouter();
   const editable = !consultation || consultation.status === 'borrador';
   const vs0 = (consultation?.vital_signs ?? {}) as VitalSigns;
@@ -299,7 +302,38 @@ export default function ConsultationForm({ patient, consultation, appointmentId 
           )}
         </div>
       ) : consultation?.status === 'cerrada' ? (
-        <div className="rounded-xl border border-vitamed-100 bg-white p-6">
+        <div className="space-y-4">
+          {/* Contacto rápido post-consulta (solo mensajes informativos) */}
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-vitamed-100 bg-white p-4">
+            <WAButton
+              phone={patient.whatsapp ?? patient.phone}
+              label="Seguimiento"
+              message={WA_TEMPLATES.postconsulta({
+                clinica: clinic?.clinic_name ?? 'Vitamed',
+                nombre: patient.first_name,
+              })}
+            />
+            {f.next_control_date && (
+              <WAButton
+                phone={patient.whatsapp ?? patient.phone}
+                label="Aviso de control"
+                message={WA_TEMPLATES.control({
+                  clinica: clinic?.clinic_name ?? 'Vitamed',
+                  nombre: patient.first_name,
+                  dias: Math.max(
+                    0,
+                    Math.ceil(
+                      (new Date(`${f.next_control_date}T12:00:00-05:00`).getTime() -
+                        new Date(`${todayEC()}T12:00:00-05:00`).getTime()) /
+                        86400000
+                    )
+                  ),
+                })}
+              />
+            )}
+          </div>
+
+          <div className="rounded-xl border border-vitamed-100 bg-white p-6">
           {!showAmend ? (
             <button
               onClick={() => setShowAmend(true)}
@@ -332,6 +366,7 @@ export default function ConsultationForm({ patient, consultation, appointmentId 
               </div>
             </div>
           )}
+          </div>
         </div>
       ) : null}
     </div>

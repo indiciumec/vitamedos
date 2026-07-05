@@ -1,4 +1,4 @@
-// middleware.ts — refresh de sesión + protección de rutas por rol
+// proxy.ts (Next 16; antes middleware.ts) — refresh de sesión + protección de rutas por rol
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database, UserRole } from '@/types/database.types';
@@ -13,10 +13,10 @@ const ROUTE_ROLES: Record<string, UserRole[]> = {
   '/historia': ['medico'],
   '/caja': ['recepcion', 'admin', 'medico'], // medico solo lectura (RLS lo garantiza)
   '/auditoria': ['admin'],
-  '/configuracion': ['admin'],
+  '/configuracion': ['medico', 'admin'],
 };
 
-export async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(

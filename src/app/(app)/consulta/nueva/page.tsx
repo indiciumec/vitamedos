@@ -8,9 +8,10 @@ export const dynamic = 'force-dynamic';
 
 type Search = { paciente?: string; cita?: string };
 
-export default async function NuevaConsultaPage({ searchParams }: { searchParams: Search }) {
-  if (!searchParams.paciente) redirect('/consulta');
-  const patient = await getPatientClinical(searchParams.paciente).catch(() => null);
+export default async function NuevaConsultaPage({ searchParams }: { searchParams: Promise<Search> }) {
+  const sp = await searchParams;
+  if (!sp.paciente) redirect('/consulta');
+  const patient = await getPatientClinical(sp.paciente).catch(() => null);
   if (!patient) notFound();
   const age = calcAge(patient.birth_date);
 
@@ -33,7 +34,7 @@ export default async function NuevaConsultaPage({ searchParams }: { searchParams
         </div>
       )}
 
-      <ConsultationForm patient={patient} appointmentId={searchParams.cita ?? null} />
+      <ConsultationForm patient={patient} appointmentId={sp.cita ?? null} />
     </main>
   );
 }

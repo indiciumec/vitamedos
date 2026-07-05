@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getCurrentProfile } from '@/lib/auth';
 import Sidebar from '@/components/Sidebar';
+import MobileTabbar from '@/components/mobile-tabbar';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const profile = await getCurrentProfile();
@@ -9,7 +10,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-screen">
       <Sidebar role={profile.role} name={profile.full_name} />
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="app-main min-w-0 flex-1">{children}</div>
+      <MobileTabbar role={profile.role} />
     </div>
   );
 }

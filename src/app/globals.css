@@ -1,6 +1,24 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Paleta de marca Vitamed (derivada del logo) — Tailwind v4 CSS-first */
+@theme {
+  --color-vitamed-50: #effafc;
+  --color-vitamed-100: #d7f2f7;
+  --color-vitamed-200: #b3e9f0;
+  --color-vitamed-300: #7fd8e4;
+  --color-vitamed-400: #3fbcce;
+  --color-vitamed-500: #1b9aaf;
+  --color-vitamed-600: #157f92;
+  --color-vitamed-700: #166578;
+  --color-vitamed-800: #175264;
+  --color-vitamed-900: #16455a;
+  --color-vitamed-950: #0f2f3f;
+}
+
+/* Tipografía de marca: Quicksand vía next/font (var --font-quicksand) */
+@theme inline {
+  --font-brand: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif;
+}
 
 @media print {
   .no-print {
@@ -8,5 +26,57 @@
   }
   body {
     background: #fff !important;
+  }
+}
+
+/* ---------- Móvil (≤768px) ---------- */
+@media (max-width: 768px) {
+  /* 16px en inputs evita el auto-zoom de iOS al enfocar */
+  body,
+  input,
+  select,
+  textarea,
+  button {
+    font-size: 16px;
+  }
+  input,
+  select,
+  textarea {
+    min-height: 44px; /* target táctil HIG */
+  }
+  button.rounded-md,
+  a.rounded-md {
+    min-height: 44px;
+  }
+  .desktop-only {
+    display: none !important;
+  }
+  .app-main {
+    margin-left: 0;
+    padding: 16px 16px calc(84px + env(safe-area-inset-bottom));
+  }
+  .rx-sheet {
+    max-width: 340px;
+    margin-inline: auto;
+  }
+}
+
+/* Tabbar inferior estilo iOS */
+.mobile-tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: none;
+  background: rgba(245, 245, 247, 0.88);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-top: 0.5px solid rgba(0, 0, 0, 0.12);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@media (max-width: 768px) {
+  .mobile-tabbar {
+    display: flex;
   }
 }

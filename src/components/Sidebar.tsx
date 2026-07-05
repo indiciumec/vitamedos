@@ -15,6 +15,7 @@ const NAV: { href: string; label: string; roles: UserRole[] }[] = [
   { href: '/documentos', label: 'Documentos', roles: ['medico'] },
   { href: '/vademecum', label: 'Vademécum', roles: ['medico', 'admin'] },
   { href: '/caja', label: 'Caja', roles: ['medico', 'recepcion', 'admin'] },
+  { href: '/configuracion', label: 'Ajustes', roles: ['medico', 'admin'] },
 ];
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -35,7 +36,7 @@ export default function Sidebar({ role, name }: { role: UserRole; name: string }
   }
 
   return (
-    <aside className="no-print flex w-56 shrink-0 flex-col border-r border-vitamed-100 bg-white">
+    <aside className="no-print desktop-only flex w-56 shrink-0 flex-col border-r border-vitamed-100 bg-white">
       <div className="flex items-center gap-3 px-5 py-5">
         <Image src="/logo.svg" alt="Vitamed" width={36} height={36} />
         <div>

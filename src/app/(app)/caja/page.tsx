@@ -5,8 +5,9 @@ import CajaClient from './CajaClient';
 
 export const dynamic = 'force-dynamic';
 
-export default async function CajaPage({ searchParams }: { searchParams: { fecha?: string } }) {
-  const fecha = /^\d{4}-\d{2}-\d{2}$/.test(searchParams.fecha ?? '') ? searchParams.fecha! : todayEC();
+export default async function CajaPage({ searchParams }: { searchParams: Promise<{ fecha?: string }> }) {
+  const sp = await searchParams;
+  const fecha = /^\d{4}-\d{2}-\d{2}$/.test(sp.fecha ?? '') ? sp.fecha! : todayEC();
   const { from, to } = dayRange(fecha);
 
   const [reporte, pagosDia, pendientes, services] = await Promise.all([

@@ -57,7 +57,7 @@ export default function PrescriptionComposer({ preselectedPatient, consultationI
   // Autocompletar por ítem
   const [acIndex, setAcIndex] = useState<number | null>(null);
   const [acResults, setAcResults] = useState<DrugWithBrands[]>([]);
-  const acTimer = useRef<ReturnType<typeof setTimeout>>();
+  const acTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const setItem = (i: number, patch: Partial<Item>) =>
     setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));

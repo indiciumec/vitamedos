@@ -7,13 +7,14 @@ import type { PatientInput } from '@/lib/validators';
 
 export const dynamic = 'force-dynamic';
 
-export default async function EditarPacientePage({ params }: { params: { id: string } }) {
+export default async function EditarPacientePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const profile = (await getCurrentProfile())!;
   const isMedico = profile.role === 'medico';
 
   const patient = isMedico
-    ? await getPatientClinical(params.id).catch(() => null)
-    : await getPatientBasic(params.id);
+    ? await getPatientClinical(id).catch(() => null)
+    : await getPatientBasic(id);
   if (!patient) notFound();
 
   return (
@@ -22,7 +23,7 @@ export default async function EditarPacientePage({ params }: { params: { id: str
         Editar paciente — {patient.first_name} {patient.last_name}
       </h1>
       <PatientForm
-        patientId={params.id}
+        patientId={id}
         initial={patient as Partial<PatientInput>}
         showClinical={isMedico}
       />

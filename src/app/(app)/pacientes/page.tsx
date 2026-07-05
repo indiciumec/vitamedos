@@ -25,6 +25,7 @@ export default function PacientesPage() {
         </p>
         <PatientSearchSelect
           autoFocus
+          showWhatsApp
           onSelect={(p) => p && router.push(`/pacientes/${p.id}`)}
         />
       </div>
