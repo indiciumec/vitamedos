@@ -103,7 +103,7 @@ export default function PatientSearchSelect({ onSelect, selected, placeholder, a
               </button>
               {showWhatsApp && (
                 <span onMouseDown={(e) => e.preventDefault()}>
-                  <WAButton compact label="WA" phone={p.whatsapp ?? p.phone} />
+                  <WAButton compact label="WA" phone={p.whatsapp ?? p.phone} log={{ patientId: p.id, kind: 'manual' }} />
                 </span>
               )}
             </li>

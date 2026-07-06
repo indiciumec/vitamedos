@@ -1,25 +1,50 @@
 'use client';
 
 import { waLink } from '@/lib/whatsapp';
+import { logCommunicationAction } from '@/lib/actions';
+import type { CommunicationKind } from '@/types/database.types';
+
+type LogInfo = {
+  patientId: string;
+  kind: CommunicationKind;
+  appointmentId?: string | null;
+  consultationId?: string | null;
+};
 
 type Props = {
   phone: string | null | undefined;
   message?: string;
   label?: string;
   compact?: boolean;
+  /** Si viene, registra el contacto en la bitácora (CRM) al abrir WhatsApp. */
+  log?: LogInfo;
 };
 
 /** Botón pill verde WhatsApp. Retorna null si el número no es un celular EC válido. */
-export default function WAButton({ phone, message, label, compact }: Props) {
+export default function WAButton({ phone, message, label, compact, log }: Props) {
   const href = waLink(phone, message);
   if (!href) return null;
+
+  function handleClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (log) {
+      // Fire-and-forget: no bloquea la apertura de WhatsApp
+      void logCommunicationAction({
+        patient_id: log.patientId,
+        kind: log.kind,
+        message_snapshot: message ?? null,
+        appointment_id: log.appointmentId ?? null,
+        consultation_id: log.consultationId ?? null,
+      });
+    }
+  }
 
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={(e) => e.stopPropagation()}
+      onClick={handleClick}
       className={`inline-flex items-center gap-1 rounded-full font-medium ${
         compact ? 'px-2.5 py-0.5 text-xs' : 'px-4 py-2 text-sm'
       }`}

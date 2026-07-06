@@ -1,7 +1,7 @@
 // lib/utils.ts — helpers de fecha (TZ Ecuador -05:00), formato y etiquetas
 import type {
-  AppointmentStatus, ConsultationStatus, DocumentType,
-  PaymentMethod, PaymentStatus,
+  AppointmentStatus, CommunicationKind, CommunicationStatus, ConsultationStatus,
+  DocumentType, PaymentMethod, PaymentStatus,
 } from '@/types/database.types';
 
 export const EC_OFFSET = '-05:00';
@@ -157,4 +157,27 @@ export const DOC_TYPE_LABELS: Record<DocumentType, string> = {
   informe_clinico: 'Informe clínico',
   consentimiento_informado: 'Consentimiento informado',
   consentimiento_datos: 'Consentimiento de datos (LOPDP)',
+};
+
+export const COMM_KIND_LABELS: Record<CommunicationKind, string> = {
+  confirmacion: 'Confirmación de cita',
+  recordatorio: 'Recordatorio',
+  postconsulta: 'Seguimiento post-consulta',
+  control: 'Aviso de control',
+  pago: 'Recordatorio de pago',
+  manual: 'Mensaje',
+};
+
+export const COMM_STATUS_LABELS: Record<CommunicationStatus, string> = {
+  enviado: 'Enviado',
+  respondido: 'Respondió',
+  confirmado: 'Confirmó',
+  sin_respuesta: 'Sin respuesta',
+};
+
+export const COMM_STATUS_BADGE: Record<CommunicationStatus, string> = {
+  enviado: 'bg-slate-100 text-slate-700',
+  respondido: 'bg-blue-100 text-blue-800',
+  confirmado: 'bg-emerald-100 text-emerald-800',
+  sin_respuesta: 'bg-amber-100 text-amber-800',
 };

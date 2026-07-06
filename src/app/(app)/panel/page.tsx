@@ -111,6 +111,7 @@ export default async function PanelPage() {
                           fecha: formatDate(c.scheduled_at),
                           hora: formatTime(c.scheduled_at),
                         })}
+                        log={{ patientId: c.patient.id, kind: 'confirmacion', appointmentId: c.id }}
                       />
                     )}
                     <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${APPT_STATUS_BADGE[c.status]}`}>

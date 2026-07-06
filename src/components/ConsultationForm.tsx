@@ -312,6 +312,7 @@ export default function ConsultationForm({ patient, consultation, appointmentId,
                 clinica: clinic?.clinic_name ?? 'Vitamed',
                 nombre: patient.first_name,
               })}
+              log={{ patientId: patient.id, kind: 'postconsulta', consultationId: consultation.id }}
             />
             {f.next_control_date && (
               <WAButton
@@ -329,6 +330,7 @@ export default function ConsultationForm({ patient, consultation, appointmentId,
                     )
                   ),
                 })}
+                log={{ patientId: patient.id, kind: 'control', consultationId: consultation.id }}
               />
             )}
           </div>

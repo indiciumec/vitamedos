@@ -11,6 +11,9 @@ import * as documents from '@/lib/queries/documents';
 import * as payments from '@/lib/queries/payments';
 import * as extra from '@/lib/queries/extra';
 import * as settings from '@/lib/queries/settings';
+import * as communications from '@/lib/queries/communications';
+import type { CommunicationInput } from '@/lib/queries/communications';
+import type { CommunicationStatus } from '@/types/database.types';
 import type {
   AppointmentInput, ConsultationInput, DocumentInput, PatientInput, PaymentInput, PrescriptionInput,
 } from '@/lib/validators';
@@ -99,6 +102,14 @@ export async function upsertTemplateAction(
   tpl: Partial<DocumentTemplate> & Pick<DocumentTemplate, 'doc_type' | 'name' | 'body_template'>
 ) {
   return safe(() => extra.upsertTemplate(tpl));
+}
+
+// ---------- Comunicaciones (CRM WhatsApp) ----------
+export async function logCommunicationAction(input: CommunicationInput) {
+  return safe(() => communications.logCommunication(input));
+}
+export async function updateCommunicationStatusAction(id: string, status: CommunicationStatus) {
+  return safe(() => communications.updateCommunicationStatus(id, status));
 }
 
 // ---------- Perfil del consultorio ----------

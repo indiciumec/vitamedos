@@ -25,6 +25,19 @@ export async function getServices(): Promise<Service[]> {
   return data;
 }
 
+/** Pagos de un paciente (para el timeline de la ficha). Médico/admin lectura. */
+export async function getPatientPayments(patientId: string): Promise<Payment[]> {
+  await requireRole('medico', 'admin', 'recepcion');
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('payments')
+    .select('*')
+    .eq('patient_id', patientId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
 export async function getConsultation(id: string): Promise<Consultation> {
   await requireRole('medico');
   const supabase = await createClient();

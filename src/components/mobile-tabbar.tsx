@@ -11,6 +11,7 @@ const TABS: Tab[] = [
   { href: '/panel', label: 'Hoy', icon: '☀️', roles: ['medico', 'recepcion', 'admin', 'tecnico'] },
   { href: '/agenda', label: 'Agenda', icon: '📅', roles: ['medico', 'recepcion', 'admin'] },
   { href: '/pacientes', label: 'Pacientes', icon: '👤', roles: ['medico', 'recepcion', 'admin'] },
+  { href: '/contactos', label: 'Contactos', icon: '💬', roles: ['medico', 'recepcion', 'admin'] },
   { href: '/recetas', label: 'Recetas', icon: '📄', roles: ['medico'] },
   { href: '/caja', label: 'Caja', icon: '💵', roles: ['recepcion', 'admin'] },
   { href: '/configuracion', label: 'Ajustes', icon: '⚙️', roles: ['admin'] },

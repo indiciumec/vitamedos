@@ -239,6 +239,27 @@ export type ClinicSettings = {
   updated_at: string;
 };
 
+export type CommunicationKind =
+  | 'confirmacion' | 'recordatorio' | 'postconsulta' | 'control' | 'pago' | 'manual';
+export type CommunicationStatus = 'enviado' | 'respondido' | 'confirmado' | 'sin_respuesta';
+
+/** Bitácora de contacto con el paciente (CRM WhatsApp sobre wa.me). */
+export type Communication = {
+  id: string;
+  patient_id: string;
+  channel: string;
+  kind: CommunicationKind;
+  message_snapshot: string | null;
+  status: CommunicationStatus;
+  appointment_id: string | null;
+  consultation_id: string | null;
+  follow_up_date: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type AuditLog = {
   id: number;
   occurred_at: string;
@@ -263,6 +284,7 @@ export type AppointmentInsert = OptionalNullable<Omit<Appointment, 'id' | 'creat
 export type ConsultationInsert = OptionalNullable<Omit<Consultation, 'id' | 'created_at' | 'updated_at' | 'closed_at' | 'amended_by_id' | 'amendment_note'>> & { id?: string };
 export type PrescriptionItemInsert = OptionalNullable<Omit<PrescriptionItem, 'id' | 'prescription_id' | 'created_at'>>;
 export type PaymentInsert = OptionalNullable<Omit<Payment, 'id' | 'created_at' | 'updated_at'>> & { id?: string };
+export type CommunicationInsert = OptionalNullable<Omit<Communication, 'id' | 'created_at' | 'updated_at'>> & { id?: string };
 
 // ---------- Database type para supabase-js ----------
 // NOTA: postgrest-js >= 2.x exige `Relationships` en cada tabla/vista;
@@ -284,6 +306,7 @@ export interface Database {
       payments: { Row: Payment; Insert: PaymentInsert; Update: Partial<Payment>; Relationships: [] };
       audit_logs: { Row: AuditLog; Insert: never; Update: never; Relationships: [] };
       clinic_settings: { Row: ClinicSettings; Insert: Partial<ClinicSettings>; Update: Partial<Omit<ClinicSettings, 'id'>>; Relationships: [] };
+      communications: { Row: Communication; Insert: CommunicationInsert; Update: Partial<Communication>; Relationships: [] };
     };
     Views: {
       patients_basic: { Row: PatientBasic; Relationships: [] };
@@ -301,6 +324,8 @@ export interface Database {
       payment_method: PaymentMethod;
       payment_status: PaymentStatus;
       identification_type: IdentificationType;
+      communication_kind: CommunicationKind;
+      communication_status: CommunicationStatus;
     };
   };
 }

@@ -3,10 +3,14 @@ import { notFound } from 'next/navigation';
 import { getCurrentProfile } from '@/lib/auth';
 import { getPatientClinical } from '@/lib/queries/patients';
 import { getPatientConsultations } from '@/lib/queries/consultations';
-import { getPatientBasic, getPatientPrescriptions } from '@/lib/queries/extra';
+import { getPatientBasic, getPatientPayments, getPatientPrescriptions } from '@/lib/queries/extra';
 import { getPatientDocuments } from '@/lib/queries/documents';
+import { getPatientCommunications } from '@/lib/queries/communications';
+import PatientTimeline, { type TimelineItem } from '@/components/PatientTimeline';
 import {
-  CONSULT_STATUS_BADGE, CONSULT_STATUS_LABELS, DOC_TYPE_LABELS, calcAge, formatDate,
+  COMM_KIND_LABELS, CONSULT_STATUS_BADGE, CONSULT_STATUS_LABELS, DOC_TYPE_LABELS,
+  PAYMENT_METHOD_LABELS, PAYMENT_STATUS_BADGE, PAYMENT_STATUS_LABELS,
+  calcAge, formatDate, formatMoney,
 } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -30,12 +34,61 @@ export default async function FichaPacientePage({ params }: { params: Promise<{ 
     const patient = await getPatientClinical(id).catch(() => null);
     if (!patient) notFound();
 
-    const [consultas, recetas, docs] = await Promise.all([
+    const [consultas, recetas, docs, pagos, comunicaciones] = await Promise.all([
       getPatientConsultations(patient.id).catch(() => []),
       getPatientPrescriptions(patient.id).catch(() => []),
       getPatientDocuments(patient.id).catch(() => []),
+      getPatientPayments(patient.id).catch(() => []),
+      getPatientCommunications(patient.id).catch(() => []),
     ]);
     const age = calcAge(patient.birth_date);
+
+    // Cronología unificada (§4.1): todo lo del paciente en una sola línea de tiempo
+    const timeline: TimelineItem[] = [
+      ...consultas.map((c): TimelineItem => ({
+        id: c.id,
+        type: 'consulta',
+        date: c.created_at,
+        title: c.reason ?? 'Consulta',
+        subtitle: c.diagnosis_text,
+        badge: CONSULT_STATUS_LABELS[c.status],
+        badgeClass: CONSULT_STATUS_BADGE[c.status],
+        href: `/consulta/${c.id}`,
+      })),
+      ...recetas.map((r): TimelineItem => ({
+        id: r.id,
+        type: 'receta',
+        date: r.issued_at,
+        title: `Receta #${r.prescription_number}`,
+        subtitle: r.diagnosis_text,
+        badge: r.status === 'anulada' ? 'Anulada' : null,
+        badgeClass: 'bg-red-100 text-red-700',
+        href: `/recetas/${r.id}`,
+      })),
+      ...docs.map((d): TimelineItem => ({
+        id: d.id,
+        type: 'documento',
+        date: d.issued_at,
+        title: `${DOC_TYPE_LABELS[d.doc_type]} · N.º ${d.document_number}`,
+        href: `/documentos/${d.id}`,
+      })),
+      ...pagos.map((p): TimelineItem => ({
+        id: p.id,
+        type: 'pago',
+        date: p.created_at,
+        title: `${formatMoney(p.amount)} · ${PAYMENT_METHOD_LABELS[p.method]}`,
+        subtitle: p.notes,
+        badge: PAYMENT_STATUS_LABELS[p.status],
+        badgeClass: PAYMENT_STATUS_BADGE[p.status],
+      })),
+      ...comunicaciones.map((m): TimelineItem => ({
+        id: m.id,
+        type: 'comunicacion',
+        date: m.created_at,
+        title: COMM_KIND_LABELS[m.kind],
+        subtitle: m.message_snapshot,
+      })),
+    ].sort((a, b) => (a.date < b.date ? 1 : -1));
 
     return (
       <main className="mx-auto max-w-5xl p-8">
@@ -99,86 +152,8 @@ export default async function FichaPacientePage({ params }: { params: Promise<{ 
             </dl>
           </section>
 
-          <div className="space-y-6 lg:col-span-2">
-            <section className="rounded-xl border border-vitamed-100 bg-white">
-              <h2 className="border-b border-vitamed-100 px-5 py-3 text-sm font-semibold text-vitamed-900">
-                Historial de consultas
-              </h2>
-              {consultas.length === 0 ? (
-                <p className="px-5 py-4 text-sm text-vitamed-500">Sin consultas registradas.</p>
-              ) : (
-                <ul className="divide-y divide-vitamed-50">
-                  {consultas.map((c) => (
-                    <li key={c.id}>
-                      <Link href={`/consulta/${c.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-vitamed-50">
-                        <span className="w-24 shrink-0 text-sm tabular-nums text-vitamed-600">
-                          {formatDate(c.created_at)}
-                        </span>
-                        <span className="flex-1 truncate text-sm text-vitamed-900">
-                          {c.reason ?? 'Consulta'}
-                          {c.diagnosis_text && <span className="text-vitamed-500"> · {c.diagnosis_text}</span>}
-                        </span>
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${CONSULT_STATUS_BADGE[c.status]}`}>
-                          {CONSULT_STATUS_LABELS[c.status]}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            <section className="rounded-xl border border-vitamed-100 bg-white">
-              <h2 className="border-b border-vitamed-100 px-5 py-3 text-sm font-semibold text-vitamed-900">
-                Recetas
-              </h2>
-              {recetas.length === 0 ? (
-                <p className="px-5 py-4 text-sm text-vitamed-500">Sin recetas emitidas.</p>
-              ) : (
-                <ul className="divide-y divide-vitamed-50">
-                  {recetas.map((r) => (
-                    <li key={r.id}>
-                      <Link href={`/recetas/${r.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-vitamed-50">
-                        <span className="w-24 shrink-0 text-sm tabular-nums text-vitamed-600">
-                          {formatDate(r.issued_at)}
-                        </span>
-                        <span className="flex-1 truncate text-sm text-vitamed-900">
-                          Receta #{r.prescription_number}
-                          {r.diagnosis_text && <span className="text-vitamed-500"> · {r.diagnosis_text}</span>}
-                        </span>
-                        {r.status === 'anulada' && (
-                          <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">Anulada</span>
-                        )}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            <section className="rounded-xl border border-vitamed-100 bg-white">
-              <h2 className="border-b border-vitamed-100 px-5 py-3 text-sm font-semibold text-vitamed-900">
-                Documentos
-              </h2>
-              {docs.length === 0 ? (
-                <p className="px-5 py-4 text-sm text-vitamed-500">Sin documentos emitidos.</p>
-              ) : (
-                <ul className="divide-y divide-vitamed-50">
-                  {docs.map((d) => (
-                    <li key={d.id}>
-                      <Link href={`/documentos/${d.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-vitamed-50">
-                        <span className="w-24 shrink-0 text-sm tabular-nums text-vitamed-600">
-                          {formatDate(d.issued_at)}
-                        </span>
-                        <span className="flex-1 truncate text-sm text-vitamed-900">
-                          {DOC_TYPE_LABELS[d.doc_type]} · N.º {d.document_number}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
+          <div className="lg:col-span-2">
+            <PatientTimeline items={timeline} />
           </div>
         </div>
       </main>
