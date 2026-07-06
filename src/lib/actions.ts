@@ -13,6 +13,8 @@ import * as extra from '@/lib/queries/extra';
 import * as settings from '@/lib/queries/settings';
 import * as communications from '@/lib/queries/communications';
 import type { CommunicationInput } from '@/lib/queries/communications';
+import * as internal from '@/lib/queries/internal';
+import type { InternalNoteInput } from '@/lib/queries/internal';
 import type { CommunicationStatus } from '@/types/database.types';
 import type {
   AppointmentInput, ConsultationInput, DocumentInput, PatientInput, PaymentInput, PrescriptionInput,
@@ -110,6 +112,17 @@ export async function logCommunicationAction(input: CommunicationInput) {
 }
 export async function updateCommunicationStatusAction(id: string, status: CommunicationStatus) {
   return safe(() => communications.updateCommunicationStatus(id, status));
+}
+
+// ---------- Tablero interno (tareas + mensajes) ----------
+export async function createInternalNoteAction(input: InternalNoteInput) {
+  return safe(() => internal.createInternalNote(input));
+}
+export async function toggleTaskDoneAction(id: string, done: boolean) {
+  return safe(() => internal.toggleTaskDone(id, done));
+}
+export async function deleteInternalNoteAction(id: string) {
+  return safe(() => internal.deleteInternalNote(id));
 }
 
 // ---------- Perfil del consultorio ----------

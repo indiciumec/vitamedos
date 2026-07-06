@@ -260,6 +260,23 @@ export type Communication = {
   updated_at: string;
 };
 
+export type InternalNoteKind = 'tarea' | 'mensaje';
+
+/** Tablero interno de coordinación (tareas + mensajes entre médico y recepción). */
+export type InternalNote = {
+  id: string;
+  kind: InternalNoteKind;
+  body: string;
+  target_role: string | null;
+  patient_id: string | null;
+  author_name: string | null;
+  is_done: boolean;
+  done_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type AuditLog = {
   id: number;
   occurred_at: string;
@@ -285,6 +302,7 @@ export type ConsultationInsert = OptionalNullable<Omit<Consultation, 'id' | 'cre
 export type PrescriptionItemInsert = OptionalNullable<Omit<PrescriptionItem, 'id' | 'prescription_id' | 'created_at'>>;
 export type PaymentInsert = OptionalNullable<Omit<Payment, 'id' | 'created_at' | 'updated_at'>> & { id?: string };
 export type CommunicationInsert = OptionalNullable<Omit<Communication, 'id' | 'created_at' | 'updated_at'>> & { id?: string };
+export type InternalNoteInsert = OptionalNullable<Omit<InternalNote, 'id' | 'created_at' | 'updated_at' | 'is_done'>> & { id?: string; is_done?: boolean };
 
 // ---------- Database type para supabase-js ----------
 // NOTA: postgrest-js >= 2.x exige `Relationships` en cada tabla/vista;
@@ -307,6 +325,7 @@ export interface Database {
       audit_logs: { Row: AuditLog; Insert: never; Update: never; Relationships: [] };
       clinic_settings: { Row: ClinicSettings; Insert: Partial<ClinicSettings>; Update: Partial<Omit<ClinicSettings, 'id'>>; Relationships: [] };
       communications: { Row: Communication; Insert: CommunicationInsert; Update: Partial<Communication>; Relationships: [] };
+      internal_notes: { Row: InternalNote; Insert: InternalNoteInsert; Update: Partial<InternalNote>; Relationships: [] };
     };
     Views: {
       patients_basic: { Row: PatientBasic; Relationships: [] };
@@ -326,6 +345,7 @@ export interface Database {
       identification_type: IdentificationType;
       communication_kind: CommunicationKind;
       communication_status: CommunicationStatus;
+      internal_note_kind: InternalNoteKind;
     };
   };
 }

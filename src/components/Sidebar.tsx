@@ -10,6 +10,7 @@ const NAV: { href: string; label: string; roles: UserRole[] }[] = [
   { href: '/panel', label: 'Panel', roles: ['medico', 'recepcion', 'admin', 'tecnico'] },
   { href: '/agenda', label: 'Agenda', roles: ['medico', 'recepcion', 'admin'] },
   { href: '/pacientes', label: 'Pacientes', roles: ['medico', 'recepcion', 'admin'] },
+  { href: '/pendientes', label: 'Pendientes', roles: ['medico', 'recepcion', 'admin'] },
   { href: '/contactos', label: 'Contactos', roles: ['medico', 'recepcion', 'admin'] },
   { href: '/consulta', label: 'Consulta', roles: ['medico'] },
   { href: '/recetas', label: 'Recetas', roles: ['medico'] },

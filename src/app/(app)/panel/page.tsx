@@ -4,6 +4,7 @@ import { getAppointments } from '@/lib/queries/appointments';
 import { getDailyCash } from '@/lib/queries/payments';
 import { listMyDrafts } from '@/lib/queries/extra';
 import { getClinicSettings } from '@/lib/queries/settings';
+import { listInternalNotes } from '@/lib/queries/internal';
 import { WA_TEMPLATES } from '@/lib/whatsapp';
 import WAButton from '@/components/wa-button';
 import {
@@ -20,15 +21,18 @@ export default async function PanelPage() {
   const { from, to } = dayRange(hoy);
 
   const canAgenda = ['medico', 'recepcion', 'admin'].includes(profile.role);
-  const [citas, caja, borradores, clinic] = await Promise.all([
+  const [citas, caja, borradores, clinic, notas] = await Promise.all([
     canAgenda ? getAppointments(from, to).catch(() => []) : Promise.resolve([]),
     canAgenda ? getDailyCash(hoy).catch(() => null) : Promise.resolve(null),
     profile.role === 'medico' ? listMyDrafts().catch(() => []) : Promise.resolve([]),
     getClinicSettings().catch(() => null),
+    canAgenda ? listInternalNotes().catch(() => []) : Promise.resolve([]),
   ]);
   const clinicName = clinic?.clinic_name ?? 'Vitamed';
 
   const activas = citas.filter((c) => !['cancelada', 'no_asistio'].includes(c.status));
+  const tareasPend = notas.filter((n) => n.kind === 'tarea' && !n.is_done);
+  const ultimoMensaje = notas.find((n) => n.kind === 'mensaje');
 
   return (
     <main className="mx-auto max-w-5xl p-8">
@@ -82,6 +86,42 @@ export default async function PanelPage() {
               </Link>
             )}
           </div>
+
+          {(tareasPend.length > 0 || ultimoMensaje) && (
+            <section className="mb-8 rounded-xl border border-vitamed-100 bg-white">
+              <h2 className="flex items-center justify-between border-b border-vitamed-100 px-5 py-3 text-sm font-semibold text-vitamed-900">
+                Pendientes del consultorio
+                <Link href="/pendientes" className="text-xs font-normal text-vitamed-600 hover:underline">
+                  Ver tablero →
+                </Link>
+              </h2>
+              <div className="px-5 py-3">
+                {tareasPend.length > 0 ? (
+                  <ul className="space-y-1.5">
+                    {tareasPend.slice(0, 4).map((n) => (
+                      <li key={n.id} className="flex items-start gap-2 text-sm text-vitamed-800">
+                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-vitamed-400" />
+                        <span className="min-w-0 flex-1 truncate">{n.body}</span>
+                      </li>
+                    ))}
+                    {tareasPend.length > 4 && (
+                      <li className="text-xs text-vitamed-500">+{tareasPend.length - 4} tarea(s) más</li>
+                    )}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-vitamed-500">Sin tareas pendientes.</p>
+                )}
+                {ultimoMensaje && (
+                  <div className="mt-3 rounded-lg bg-vitamed-50 px-3 py-2">
+                    <div className="text-[11px] font-medium text-vitamed-600">
+                      💬 Último mensaje interno{ultimoMensaje.author_name ? ` · ${ultimoMensaje.author_name}` : ''}
+                    </div>
+                    <div className="truncate text-sm text-vitamed-800">{ultimoMensaje.body}</div>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
 
           <section className="rounded-xl border border-vitamed-100 bg-white">
             <h2 className="border-b border-vitamed-100 px-5 py-3 text-sm font-semibold text-vitamed-900">
