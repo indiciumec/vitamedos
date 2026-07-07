@@ -23,25 +23,36 @@ def col_of(x0):
     return 'x'
 
 def parse(pdf_path):
+    """Los apellidos largos (dos apellidos) se parten en 2 líneas alrededor de la
+    fila principal. Por eso NO se agrupa por 'top' exacto: se toma cada fila con
+    número (No.) como ancla y se asigna cada palabra a su ancla vertical más cercana."""
     recs = []
     with pdfplumber.open(pdf_path) as pdf:
         for pg in pdf.pages:
-            rows = {}
-            for w in pg.extract_words(keep_blank_chars=False):
-                rows.setdefault(round(w['top']), []).append(w)
-            for top in sorted(rows):
+            words = [(w['top'], w['x0'], w['text']) for w in pg.extract_words(keep_blank_chars=False)]
+            anchors = sorted(t for t, x, txt in words if x < 65 and re.fullmatch(r'\d+', txt))
+            if not anchors:
+                continue
+            buckets = {a: [] for a in anchors}
+            for t, x, txt in words:
+                if x < 65 and re.fullmatch(r'\d+', txt):   # el propio número de fila
+                    continue
+                a = min(anchors, key=lambda A: abs(A - t))  # ancla (paciente) más cercana
+                buckets[a].append((t, x, txt))
+            for a in anchors:
                 cells = {}
-                for w in rows[top]:
-                    cells.setdefault(col_of(w['x0']), []).append(w['text'])
-                no = ' '.join(cells.get('no', [])).strip()
-                if not re.fullmatch(r'\d+', no or ''):   # solo filas de paciente
+                for t, x, txt in sorted(buckets[a], key=lambda z: (col_of(z[1]), z[0], z[1])):
+                    cells.setdefault(col_of(x), []).append(txt)
+                nombres = ' '.join(cells.get('nombres', [])).strip()
+                apellidos = ' '.join(cells.get('apellidos', [])).strip()
+                if not nombres and not apellidos:
                     continue
                 blob = ' '.join(cells.get('genero', []) + cells.get('email', []) + cells.get('cedula', []))
                 m = re.search(r'[\w.\-]+@[\w.\-]+', blob)
                 g = ' '.join(cells.get('genero', [])).strip().split()
                 recs.append({
-                    'nombres': ' '.join(cells.get('nombres', [])).strip(),
-                    'apellidos': ' '.join(cells.get('apellidos', [])).strip(),
+                    'nombres': nombres,
+                    'apellidos': apellidos,
                     'fnac': ' '.join(cells.get('fnac', [])).strip(),
                     'cedula': re.sub(r'[^\dKk]', '', ' '.join(cells.get('cedula', []))),
                     'genero': g[0] if g and g[0] in ('M', 'F') else '',

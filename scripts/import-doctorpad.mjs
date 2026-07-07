@@ -6,8 +6,10 @@
 //   node scripts/import-doctorpad.mjs --input <patients.json>              (DRY-RUN: no escribe)
 //   node scripts/import-doctorpad.mjs --input <patients.json> --commit     (escribe de verdad)
 //
-// Requiere en el entorno (solo para --commit):
-//   NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+// Requiere en el entorno (solo para --commit), UNA de estas dos vías:
+//   A) NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY   (bypassa RLS)
+//   B) NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY
+//      + VITAMED_EMAIL + VITAMED_PASSWORD (sesión de un usuario con rol medico; respeta RLS)
 //
 // Idempotente: ancla en identification_number (on conflict do nothing).
 import { readFileSync } from 'node:fs';
@@ -15,6 +17,7 @@ import { readFileSync } from 'node:fs';
 const args = process.argv.slice(2);
 const inputPath = args[args.indexOf('--input') + 1];
 const COMMIT = args.includes('--commit');
+const UPDATE = args.includes('--update');   // refresca registros existentes (merge en conflicto)
 if (!inputPath) { console.error('Falta --input <patients.json>'); process.exit(1); }
 
 // --- Validador de cédula ecuatoriana (módulo 10) ---
@@ -107,19 +110,34 @@ if (!COMMIT) {
 // --- Escritura real (idempotente) ---
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!url || !serviceKey) {
-  console.error('FALTAN env: NEXT_PUBLIC_SUPABASE_URL y/o SUPABASE_SERVICE_ROLE_KEY');
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const email = process.env.VITAMED_EMAIL;
+const password = process.env.VITAMED_PASSWORD;
+if (!url) { console.error('FALTA env: NEXT_PUBLIC_SUPABASE_URL'); process.exit(1); }
+
+const { createClient } = await import('@supabase/supabase-js');
+let supabase;
+if (serviceKey) {
+  // Vía A: service role (bypassa RLS)
+  supabase = createClient(url, serviceKey, { auth: { persistSession: false } });
+  console.log('Auth: service_role');
+} else if (anonKey && email && password) {
+  // Vía B: sesión de médico (respeta RLS)
+  supabase = createClient(url, anonKey, { auth: { persistSession: false } });
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) { console.error('Login falló:', error.message); process.exit(1); }
+  console.log(`Auth: sesión de ${email}`);
+} else {
+  console.error('FALTAN credenciales: define SUPABASE_SERVICE_ROLE_KEY, o bien ANON_KEY + VITAMED_EMAIL + VITAMED_PASSWORD');
   process.exit(1);
 }
-const { createClient } = await import('@supabase/supabase-js');
-const supabase = createClient(url, serviceKey, { auth: { persistSession: false } });
 
 let ok = 0, err = 0;
 for (let i = 0; i < records.length; i += 100) {
   const batch = records.slice(i, i + 100);
   const { error } = await supabase
     .from('patients')
-    .upsert(batch, { onConflict: 'identification_number', ignoreDuplicates: true });
+    .upsert(batch, { onConflict: 'identification_type,identification_number', ignoreDuplicates: !UPDATE });
   if (error) { console.error(`Lote ${i}-${i + batch.length}: ${error.message}`); err += batch.length; }
   else { ok += batch.length; process.stdout.write(`\rImportados: ${ok}/${records.length}`); }
 }
