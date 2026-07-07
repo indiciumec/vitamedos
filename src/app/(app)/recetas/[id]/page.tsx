@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getPrescription } from '@/lib/queries/prescriptions';
 import { getPatientBasic, getProfileName } from '@/lib/queries/extra';
@@ -22,7 +23,15 @@ export default async function RecetaPrintPage({ params }: { params: Promise<{ id
   return (
     <main className="p-8 print:p-0">
       <style>{`@page { size: A5 portrait; margin: 10mm; }`}</style>
-      <PrintButton />
+      <div className="no-print mb-4 flex flex-wrap items-center gap-3">
+        <PrintButton />
+        <Link
+          href={`/guias/nutricion?paciente=${rx.patient_id}`}
+          className="rounded-md border border-vitamed-300 bg-white px-4 py-2 text-sm font-medium text-vitamed-800 hover:bg-vitamed-50"
+        >
+          + Guía de nutrición
+        </Link>
+      </div>
 
       {rx.status === 'anulada' && (
         <p className="no-print mb-4 rounded-md bg-red-50 px-4 py-2 text-sm font-medium text-red-700">

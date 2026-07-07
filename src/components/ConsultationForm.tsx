@@ -9,9 +9,10 @@ import {
 } from '@/lib/actions';
 import type { ConsultationInput } from '@/lib/validators';
 import type { ClinicSettings, Consultation, Patient, VitalSigns } from '@/types/database.types';
-import { CONSULT_STATUS_BADGE, CONSULT_STATUS_LABELS, formatDate, todayEC } from '@/lib/utils';
+import { CONSULT_STATUS_BADGE, CONSULT_STATUS_LABELS, calcAge, formatDate, todayEC } from '@/lib/utils';
 import { WA_TEMPLATES } from '@/lib/whatsapp';
 import WAButton from '@/components/wa-button';
+import BMIIndicator from '@/components/BMIIndicator';
 
 type Props = {
   patient: Patient;
@@ -243,6 +244,11 @@ export default function ConsultationForm({ patient, consultation, appointmentId,
             </div>
           </div>
         </div>
+        {imc != null && (
+          <div className="mt-4">
+            <BMIIndicator bmi={imc} ageYears={calcAge(patient.birth_date)} sex={patient.sex} />
+          </div>
+        )}
       </section>
 
       <section className="rounded-xl border border-vitamed-100 bg-white p-6">
