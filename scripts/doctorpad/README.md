@@ -10,10 +10,13 @@ contraseña del proveedor solo se restaura dentro de su plataforma (lock-in). V�
 alterna usada: exportar reportes **PDF** desde la interfaz y parsearlos.
 
 ## Estado
-- **Pacientes** ✅ recuperados del "REPORTE PACIENTES" (574 pacientes).
-- **Historia clínica** ⏳ fragmentada en 3 reportes (Consultas, Diagnósticos, Motivos),
-  vinculada solo por nombre+fecha → importación best-effort pendiente. Ideal: obtener
-  el `.bak` descifrado vía solicitud de portabilidad LOPDP para una historia limpia.
+- **Pacientes** ✅ importados del "REPORTE PACIENTES" (574 pacientes, en producción).
+- **Historia clínica** ✅ best-effort importado: 752 consultas de los 3 reportes
+  (Consultas + Motivos + Diagnósticos), unidas por nombre+fecha, 97% vinculadas a
+  paciente, 453 pacientes con historia. Cada consulta se creó CERRADA, fechada con su
+  fecha original, con marca `[Importado de DoctorPad]` al final de `current_illness`.
+  16 consultas sin match de paciente (nombres no encontrados) quedaron fuera.
+  Nota: `consultations` no tiene columna `notes`; el marcador va en `current_illness`.
 
 ## Uso
 ```bash
@@ -25,9 +28,13 @@ python scripts/doctorpad/parse-patients.py "reportes doctor pad/Pacientes-*.pdf"
 # 2) Vista previa (NO escribe nada)
 node scripts/import-doctorpad.mjs --input ./patients_clean.json
 
-# 3) Import real (idempotente por cédula). Requiere en el entorno:
-#    NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY (solo aquí se usa la service key)
+# 3) Import real de pacientes (idempotente). Vía service_role, o vía sesión de médico:
+#    NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY + VITAMED_EMAIL + VITAMED_PASSWORD
 node scripts/import-doctorpad.mjs --input ./patients_clean.json --commit
+
+# 4) Import de historia clínica (best-effort, une los 3 reportes por nombre+fecha)
+python scripts/doctorpad/import-history.py --dir "reportes doctor pad"            # vista previa
+python scripts/doctorpad/import-history.py --dir "reportes doctor pad" --commit   # escribe
 ```
 
 ## Mapeo de pacientes
