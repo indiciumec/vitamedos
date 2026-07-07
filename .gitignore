@@ -10,3 +10,10 @@ next-env.d.ts
 .DS_Store
 
 .vercel
+
+# Datos reales de pacientes (LOPDP) — NUNCA al repo
+DoctorPad_*.zip
+*.bak
+/doctorpad-export/
+/reportes doctor pad/
+*.pdf
