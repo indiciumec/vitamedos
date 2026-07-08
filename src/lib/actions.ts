@@ -15,6 +15,7 @@ import * as communications from '@/lib/queries/communications';
 import type { CommunicationInput } from '@/lib/queries/communications';
 import * as internal from '@/lib/queries/internal';
 import type { InternalNoteInput } from '@/lib/queries/internal';
+import * as cie10 from '@/lib/queries/cie10';
 import type { CommunicationStatus } from '@/types/database.types';
 import type {
   AppointmentInput, ConsultationInput, DocumentInput, PatientInput, PaymentInput, PrescriptionInput,
@@ -112,6 +113,11 @@ export async function logCommunicationAction(input: CommunicationInput) {
 }
 export async function updateCommunicationStatusAction(id: string, status: CommunicationStatus) {
   return safe(() => communications.updateCommunicationStatus(id, status));
+}
+
+// ---------- CIE-10 (diagnósticos) ----------
+export async function searchCie10Action(term: string) {
+  return safe(() => cie10.searchCie10(term));
 }
 
 // ---------- Tablero interno (tareas + mensajes) ----------

@@ -13,6 +13,7 @@ import { CONSULT_STATUS_BADGE, CONSULT_STATUS_LABELS, calcAge, formatDate, today
 import { WA_TEMPLATES } from '@/lib/whatsapp';
 import WAButton from '@/components/wa-button';
 import BMIIndicator from '@/components/BMIIndicator';
+import Cie10Search from '@/components/Cie10Search';
 
 type Props = {
   patient: Patient;
@@ -257,6 +258,16 @@ export default function ConsultationForm({ patient, consultation, appointmentId,
           <Field label="Examen físico">
             <textarea rows={3} disabled={dis} value={f.physical_exam} onChange={set('physical_exam')} className={inputCls} />
           </Field>
+          {!dis && (
+            <div>
+              <span className="text-sm font-medium text-vitamed-900">Buscar diagnóstico (CIE-10)</span>
+              <div className="mt-1">
+                <Cie10Search
+                  onPick={(c) => setF((p) => ({ ...p, diagnosis_code: c.code, diagnosis_text: c.description }))}
+                />
+              </div>
+            </div>
+          )}
           <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
             <Field label="CIE-10">
               <input disabled={dis} placeholder="J00" value={f.diagnosis_code} onChange={set('diagnosis_code')} className={inputCls} />

@@ -260,6 +260,8 @@ export type Communication = {
   updated_at: string;
 };
 
+export type Cie10Row = { code: string; description: string };
+
 export type InternalNoteKind = 'tarea' | 'mensaje';
 
 /** Tablero interno de coordinación (tareas + mensajes entre médico y recepción). */
@@ -326,6 +328,7 @@ export interface Database {
       clinic_settings: { Row: ClinicSettings; Insert: Partial<ClinicSettings>; Update: Partial<Omit<ClinicSettings, 'id'>>; Relationships: [] };
       communications: { Row: Communication; Insert: CommunicationInsert; Update: Partial<Communication>; Relationships: [] };
       internal_notes: { Row: InternalNote; Insert: InternalNoteInsert; Update: Partial<InternalNote>; Relationships: [] };
+      cie10: { Row: Cie10Row; Insert: Cie10Row; Update: Partial<Cie10Row>; Relationships: [] };
     };
     Views: {
       patients_basic: { Row: PatientBasic; Relationships: [] };
