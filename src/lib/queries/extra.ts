@@ -17,6 +17,35 @@ export async function getPatientBasic(id: string): Promise<PatientBasic | null> 
   return data ?? null;
 }
 
+export type PatientPage = { rows: PatientBasic[]; total: number; page: number; pageSize: number };
+
+/** Directorio paginado de pacientes (ordenado por apellido). Filtro opcional `q`. */
+export async function listPatients(opts: { page?: number; pageSize?: number; q?: string } = {}): Promise<PatientPage> {
+  const page = Math.max(1, opts.page ?? 1);
+  const pageSize = Math.min(100, opts.pageSize ?? 25);
+  const supabase = await createClient();
+  let query = supabase
+    .from('patients_basic')
+    .select('*', { count: 'exact' })
+    .order('last_name', { ascending: true })
+    .order('first_name', { ascending: true });
+
+  const q = (opts.q ?? '').trim();
+  if (q.length >= 2) {
+    query = query.or(
+      `identification_number.ilike.%${q}%,` +
+      `first_name.ilike.%${q}%,` +
+      `last_name.ilike.%${q}%,` +
+      `phone.ilike.%${q}%`
+    );
+  }
+
+  const from = (page - 1) * pageSize;
+  const { data, count, error } = await query.range(from, from + pageSize - 1);
+  if (error) throw error;
+  return { rows: data ?? [], total: count ?? 0, page, pageSize };
+}
+
 export async function getServices(): Promise<Service[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
